@@ -12,14 +12,8 @@ function formatCurrency(n: number) {
   });
 }
 
-function parseBill(value: string) {
-  const digits = value.replace(/[^0-9]/g, '');
-  const n = parseInt(digits || '0', 10);
-  return n / 100;
-}
-
 export default function TipCalculator() {
-  const [billRaw, setBillRaw] = useState('');
+  const [billInput, setBillInput] = useState('');
   const [tipPercent, setTipPercent] = useState<number | null>(18);
   const [customTip, setCustomTip] = useState('');
   const [split, setSplit] = useState(1);
@@ -30,7 +24,7 @@ export default function TipCalculator() {
     setMounted(true);
   }, []);
 
-  const bill = parseBill(billRaw);
+  const bill = parseFloat(billInput || '0') || 0;
 
   const activeTip = useMemo(() => {
     if (tipPercent !== null) return tipPercent;
@@ -46,7 +40,11 @@ export default function TipCalculator() {
   const tipAmount = total - (split > 0 ? bill / split : bill);
 
   function handleBillChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setBillRaw(e.target.value);
+    let v = e.target.value;
+    // Allow digits, one dot, and at most 2 decimal places
+    if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) {
+      setBillInput(v);
+    }
   }
 
   function handlePreset(p: number) {
@@ -90,9 +88,9 @@ export default function TipCalculator() {
           </span>
           <input
             id="bill"
-            type="number"
+            type="text"
             inputMode="decimal"
-            value={billRaw ? (bill / 100).toFixed(2) : ''}
+            value={billInput}
             onChange={handleBillChange}
             placeholder="0.00"
             className="w-full pl-9 pr-4 py-4 text-3xl font-serif font-bold text-ink bg-cream rounded-2xl outline-none ring-2 ring-transparent focus:ring-chair transition-shadow placeholder:text-ink/20"
@@ -209,7 +207,7 @@ export default function TipCalculator() {
       <footer className="px-5 py-4 text-center">
         <button
           onClick={() => {
-            setBillRaw('');
+            setBillInput('');
             setTipPercent(18);
             setCustomTip('');
             setSplit(1);
